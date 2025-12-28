@@ -20,6 +20,8 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.6)
+    sequel (5.98.0)
+      bigdecimal
 
 PLATFORMS
   x64-mingw-ucrt
@@ -29,6 +31,7 @@ DEPENDENCIES
   benchmark
   mysql2
   rspec
+  sequel
 
 BUNDLED WITH
    2.6.9
