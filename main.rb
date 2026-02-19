@@ -24,7 +24,7 @@ def encryption_menu
     puts "Press 1 for AES, or 2 to return to the main menu"
     response = gets.chomp
     if response == "1"
-      aes_encryption
+      aes_encryption_menu
     elsif response == "2"
       running = FalseClass
     end
@@ -38,7 +38,7 @@ def decryption_menu
     puts "Press 1 for AES, or 2 to return to the main menu"
     response = gets.chomp
     if response == "1"
-      aes_decryption
+      aes_decryption_menu
     elsif response == "2"
       running = FalseClass
     end

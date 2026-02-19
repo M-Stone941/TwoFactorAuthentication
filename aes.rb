@@ -1,3 +1,5 @@
+require_relative "encryptionUtilities"
+
 SBOX =[
   %w[63 	7c 	77 	7b 	f2 	6b 	6f 	c5 	30 	01 	67 	2b 	fe 	d7 	ab 	76 ],
   %w[ca 	82 	c9 	7d 	fa 	59 	47 	f0 	ad 	d4 	a2 	af 	9c 	a4 	72 	c0 ],
@@ -17,12 +19,71 @@ SBOX =[
  	%w[8c 	a1 	89 	0d 	bf 	e6 	42 	68 	41 	99 	2d 	0f 	b0 	54 	bb 	16 ]
 ]
 
+def aes256encrypt(plaintext, key)
+  plaintext = pad_message(plaintext)
+  plaintext = string_to_hex(plaintext)
+  block_count = plaintext.length/16
+  ciphertext = ""
+  for i in 0..block_count-1
+    block = plaintext[i:i+15]
+    ciphertext += aes256encryptblock(block, key)
+  end
 
 
-def aes_encryption
-  puts "AES encryption has not yet been implemented"
+
 end
 
-def aes_decryption
-  puts "AES decryption has not yet been implemented"
+def aes256encryptblock(block, key)
+  #NUMBER_OF_ROUNDS = 14
+  #
+  #expandedKey = key_expansion(key)
+  #get roundKey1 from expandedKey
+  # block = add_round_key(block, expandedKey, 0)
+  #for round from 1 to NUMBER_OF_ROUNDS-1
+  #   block = subbytes(block)
+  #   block = shiftrows(block)
+  #   block = mixcolumns(block)
+  #   block = addRoundKey(block, expandedKey, round)
+
+  #block = subbytes(block)
+  #block = shiftrows(block)
+  #block = addRoundKey(block, expandedKey, 14)
+  block
+end
+
+def key_expansion(key)
+end
+
+def add_round_key(block,expanded_key,round_num)
+end
+
+def sub_bytes(block)
+end
+
+def shift_rows(block)
+end
+
+def mix_columns(block)
+end
+
+
+
+
+def aes256decrypt(ciphertext, key)
+end
+
+def aes_encryption_menu
+  puts "Please enter the message to be encrypted: "
+  plaintext = gets.chomp
+  puts "Please enter a key to encrypt the message with:"
+  key = gets.chomp
+  aes256encrypt(plaintext, key)
+end
+
+def aes_decryption_menu
+  puts "Please enter the message to be decrypted: "
+  ciphertext = gets.chomp
+  puts "Please enter a key to encrypt the message with:"
+  key = gets.chomp
+  aes256decrypt(ciphertext, key)
 end
