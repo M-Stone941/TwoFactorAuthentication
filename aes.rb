@@ -22,15 +22,12 @@ SBOX =[
 def aes256encrypt(plaintext, key)
   plaintext = pad_message(plaintext)
   plaintext = string_to_hex(plaintext)
-  block_count = plaintext.length/16
+  block_count = plaintext.length/32
   ciphertext = ""
-  for i in 0..block_count-1
-    block = plaintext[i:i+15]
+  (0..block_count - 1).each { |i|
+    block = plaintext[i... i + 31]
     ciphertext += aes256encryptblock(block, key)
-  end
-
-
-
+  }
 end
 
 def aes256encryptblock(block, key)
@@ -48,6 +45,7 @@ def aes256encryptblock(block, key)
   #block = subbytes(block)
   #block = shiftrows(block)
   #block = addRoundKey(block, expandedKey, 14)
+  puts "aes256encryptblock hasn't been coded yet"
   block
 end
 
@@ -75,15 +73,35 @@ end
 def aes_encryption_menu
   puts "Please enter the message to be encrypted: "
   plaintext = gets.chomp
-  puts "Please enter a key to encrypt the message with:"
-  key = gets.chomp
-  aes256encrypt(plaintext, key)
+  puts "Would you like to choose a 16 character key yourself, or have one randomly generated?"
+  response = ""
+  while (response != "1") and (response != "2")
+    puts "Press 1 to choose your own key, or press 2 to have one automatically generated:"
+    response = gets.chomp
+  end
+  if response == "1"
+    key = ""
+    while key.length != 16
+      puts "Please enter a 16 character key to encrypt the message with:"
+      key = gets.chomp
+      if key.length < 16
+        puts "That is too short to be a key"
+      elsif key.length > 16
+        puts "That is too long to be a key"
+      end
+    end
+  else
+    key = "1111111111111111" # placeholder, will replace
+  end
+  printf "Your key is: %s\n", key
+  puts "You will need to save the key in order to decrypt the message.\n"
+  printf "The encrypted message is %s\n\n",aes256encrypt(plaintext, key)
 end
 
 def aes_decryption_menu
   puts "Please enter the message to be decrypted: "
   ciphertext = gets.chomp
-  puts "Please enter a key to encrypt the message with:"
+  puts "Please enter the key used to encrypt the message:"
   key = gets.chomp
   aes256decrypt(ciphertext, key)
 end
