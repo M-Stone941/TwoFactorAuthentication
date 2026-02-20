@@ -1,4 +1,5 @@
 require_relative "encryptionUtilities"
+require 'securerandom'
 
 SBOX =[
   %w[63 	7c 	77 	7b 	f2 	6b 	6f 	c5 	30 	01 	67 	2b 	fe 	d7 	ab 	76 ],
@@ -91,10 +92,10 @@ def aes_encryption_menu
       end
     end
   else
-    key = "1111111111111111" # placeholder, will replace
+    key = SecureRandom.alphanumeric(16)
   end
   printf "Your key is: %s\n", key
-  puts "You will need to save the key in order to decrypt the message.\n"
+  puts "You will need to save the key in order to decrypt the message.\n\n"
   printf "The encrypted message is %s\n\n",aes256encrypt(plaintext, key)
 end
 
