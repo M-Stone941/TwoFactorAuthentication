@@ -1,7 +1,7 @@
 require_relative "encryptionUtilities"
 require 'securerandom'
 
-SBOX =[
+SBOXHEX =[
   %w[63 	7c 	77 	7b 	f2 	6b 	6f 	c5 	30 	01 	67 	2b 	fe 	d7 	ab 	76 ],
   %w[ca 	82 	c9 	7d 	fa 	59 	47 	f0 	ad 	d4 	a2 	af 	9c 	a4 	72 	c0 ],
  	%w[b7 	fd 	93 	26 	36 	3f 	f7 	cc 	34 	a5 	e5 	f1 	71 	d8 	31 	15 ],
@@ -19,6 +19,12 @@ SBOX =[
  	%w[e1 	f8 	98 	11 	69 	d9 	8e 	94 	9b 	1e 	87 	e9 	ce 	55 	28 	df ],
  	%w[8c 	a1 	89 	0d 	bf 	e6 	42 	68 	41 	99 	2d 	0f 	b0 	54 	bb 	16 ]
 ]
+
+SBOXDECIMAL = SBOXHEX.map do |a|
+  a.map { |x|x.to_i(16) }
+end
+
+
 
 def aes256encrypt(plaintext, key)
   plaintext = pad_message(plaintext)
