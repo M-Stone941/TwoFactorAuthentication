@@ -28,11 +28,11 @@ end
 
 def aes256encrypt(plaintext, key)
   plaintext = pad_message(plaintext)
-  plaintext = string_to_hex(plaintext)
-  block_count = plaintext.length/32
+  asciiArray = string_to_ascii(plaintext)
+  block_count = asciiArray.length/16
   ciphertext = ""
   (0..block_count - 1).each { |i|
-    block = plaintext[i... i + 31]
+    block = asciiArray[i... i + 15]
     ciphertext += aes256encryptblock(block, key)
   }
 end

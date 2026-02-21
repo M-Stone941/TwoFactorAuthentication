@@ -19,12 +19,12 @@ def unpad_message(message)
   end
 end
 
-def string_to_hex(string)
-  string.unpack('H*').first
+def string_to_ascii(string)
+  string.unpack("c*")
 end
 
-def hex_to_string(hex)
-  [hex].pack('H*')
+def ascii_to_string(ascii)
+  [ascii].pack('c*')
 end
 
 
