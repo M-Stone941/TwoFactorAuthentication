@@ -24,6 +24,22 @@ SBOXDECIMAL = SBOXHEX.map do |a|
   a.map { |x|x.to_i(16) }
 end
 
+Nk = 8 #number of words in key (each word is 4 characters ie 32 bits long)
+Nr = 14 #number of rounds that the algorithm is run
+
+Rcon =[ #Round constant - used in key expansion
+  [1,0,0,0],
+  [2,0,0,0],
+  [4,0,0,0],
+  [8,0,0,0],
+  [16,0,0,0],
+  [32,0,0,0],
+  [64,0,0,0],
+  [128,0,0,0],
+  [27,0,0,0],
+  [54,0,0,0]
+]
+
 
 
 def aes256encrypt(plaintext, key)
@@ -38,12 +54,11 @@ def aes256encrypt(plaintext, key)
 end
 
 def aes256encryptblock(block, key)
-  #NUMBER_OF_ROUNDS = 14
   #
   #expandedKey = key_expansion(key)
   #get roundKey1 from expandedKey
   # block = add_round_key(block, expandedKey, 0)
-  #for round from 1 to NUMBER_OF_ROUNDS-1
+  #for round from 1 to Nr - 1
   #   block = subbytes(block)
   #   block = shiftrows(block)
   #   block = mixcolumns(block)
@@ -57,6 +72,45 @@ def aes256encryptblock(block, key)
 end
 
 def key_expansion(key)
+  i = 0
+  expandedKey = []
+  # first 8 words of the key are the same as the original key
+  while i <= Nk-1
+    expandedKey[i] = key[(4*i)..(4*i+3)]
+    i += 1
+  end
+
+  while i <= (4*Nr + 3)
+    temp = expandedKey[i-1]
+    if i.modulo(Nk) == 0
+      temp = subWord(rotWord(temp)).zip(Rcon[i/Nk]).map { |array| array[0]^array[1] }
+    elsif (Nk>6) and (i.modulo(Nk) == 4)
+      temp = subWord(temp)
+    end
+    expandedKey[i] = expandedKey[i-Nk].zip(temp).map { |array| array[0]^array[1] }
+    i += 1
+  end
+  expandedKey
+
+end
+
+def rotWord(word)
+  rotatedWord = [0,0,0,0]
+  rotatedWord[0] = word[1]
+  rotatedWord[1] = word[2]
+  rotatedWord[2] = word[3]
+  rotatedWord[3] = word[0]
+  rotatedWord
+end
+
+def subWord(word)
+  [sbox(word[0]), sbox(word[1]), sbox(word[2]), sbox(word[3])]
+end
+
+def sbox(byte)
+  column = byte.div(16)
+  row = byte.modulo(16)
+  SBOXDECIMAL[column][row]
 end
 
 def add_round_key(block,expanded_key,round_num)
