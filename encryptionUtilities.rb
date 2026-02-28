@@ -27,5 +27,23 @@ def ascii_to_string(ascii)
   [ascii].pack('c*')
 end
 
+def printInHex(intArray)
+  i = 0
+  while i < intArray.length
+    temp = intArray[i].to_s(16)
+    if temp.length == 1
+      temp = "0"+temp
+    end
+    intArray[i] = temp
+    i += 1
+  end
+  i = 0
+  while i < intArray.length
+    printf "%s%s%s%s\n", intArray[i],intArray[i+1],intArray[i+2],intArray[i+3]
+    i += 4
+  end
+end
+
+
 
 

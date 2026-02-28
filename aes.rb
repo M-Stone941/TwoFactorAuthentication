@@ -71,6 +71,25 @@ def aes256encryptblock(block, key)
   block
 end
 
+def sbox(byte)
+  column = byte.div(16)
+  row = byte.modulo(16)
+  SBOXDECIMAL[column][row]
+end
+
+def rotWord(word)
+  rotatedWord = [0,0,0,0]
+  rotatedWord[0] = word[1]
+  rotatedWord[1] = word[2]
+  rotatedWord[2] = word[3]
+  rotatedWord[3] = word[0]
+  rotatedWord
+end
+
+def subWord(word)
+  [sbox(word[0]), sbox(word[1]), sbox(word[2]), sbox(word[3])]
+end
+
 def key_expansion(key)
   i = 0
   expandedKey = []
@@ -94,24 +113,13 @@ def key_expansion(key)
 
 end
 
-def rotWord(word)
-  rotatedWord = [0,0,0,0]
-  rotatedWord[0] = word[1]
-  rotatedWord[1] = word[2]
-  rotatedWord[2] = word[3]
-  rotatedWord[3] = word[0]
-  rotatedWord
-end
+testKey = [96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129,
+31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244]
+result = key_expansion(testKey)
+result.each { |i|
+  printInHex(i)
+}
 
-def subWord(word)
-  [sbox(word[0]), sbox(word[1]), sbox(word[2]), sbox(word[3])]
-end
-
-def sbox(byte)
-  column = byte.div(16)
-  row = byte.modulo(16)
-  SBOXDECIMAL[column][row]
-end
 
 def add_round_key(block,expanded_key,round_num)
 end
