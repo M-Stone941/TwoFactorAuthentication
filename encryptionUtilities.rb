@@ -29,17 +29,18 @@ end
 
 def printInHex(intArray)
   i = 0
+  hexArray = []
   while i < intArray.length
     temp = intArray[i].to_s(16)
     if temp.length == 1
       temp = "0"+temp
     end
-    intArray[i] = temp
+    hexArray[i] = temp
     i += 1
   end
   i = 0
-  while i < intArray.length
-    printf "%s%s%s%s\n", intArray[i],intArray[i+1],intArray[i+2],intArray[i+3]
+  while i < hexArray.length
+    printf "%s%s%s%s\n", hexArray[i],hexArray[i+1],hexArray[i+2],hexArray[i+3]
     i += 4
   end
 end

@@ -100,9 +100,29 @@ def key_expansion(key)
   end
 
   while i <= (4*Nr + 3)
+    #printf "Round %i\n",i
     temp = expandedKey[i-1]
+    # print "Temp: "
+    # printInHex(temp)
     if i.modulo(Nk) == 0
-      temp = subWord(rotWord(temp)).zip(Rcon[i/Nk]).map { |array| array[0]^array[1] }
+=begin
+      print "After rotword: "
+      printInHex(rotWord(temp))
+      print "After subword: "
+      printInHex(subWord(rotWord(temp)))
+      print "Rcon[i/Nk]: "
+      print Rcon[i/Nk]
+      printInHex(Rcon[i/Nk])
+      print "After xor: "
+      subWord(rotWord(temp)).zip(Rcon[i/Nk-1]).each do |x, y|
+        printf "x is %s\n",x.to_s(16)
+        printf "y is %s\n",y.to_s(16)
+        printf "x xor y is %s\n", (x^y).to_s(16)
+      end
+=end
+
+
+      temp = subWord(rotWord(temp)).zip(Rcon[i/Nk-1]).map { |array| array[0]^array[1] }
     elsif (Nk>6) and (i.modulo(Nk) == 4)
       temp = subWord(temp)
     end
@@ -116,9 +136,7 @@ end
 testKey = [96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129,
 31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244]
 result = key_expansion(testKey)
-result.each { |i|
-  printInHex(i)
-}
+result.each { |i| printInHex(i) }
 
 
 def add_round_key(block,expanded_key,round_num)
