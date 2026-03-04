@@ -40,8 +40,6 @@ Rcon =[ #Round constant - used in key expansion
   [54,0,0,0]
 ]
 
-
-
 def aes256encrypt(plaintext, key)
   plaintext = pad_message(plaintext)
   asciiArray = string_to_ascii(plaintext)
@@ -53,23 +51,7 @@ def aes256encrypt(plaintext, key)
   }
 end
 
-def aes256encryptblock(block, key)
-  #
-  #expandedKey = key_expansion(key)
-  #get roundKey1 from expandedKey
-  # block = add_round_key(block, expandedKey, 0)
-  #for round from 1 to Nr - 1
-  #   block = subbytes(block)
-  #   block = shiftrows(block)
-  #   block = mixcolumns(block)
-  #   block = addRoundKey(block, expandedKey, round)
 
-  #block = subbytes(block)
-  #block = shiftrows(block)
-  #block = addRoundKey(block, expandedKey, 14)
-  puts "aes256encryptblock hasn't been coded yet"
-  block
-end
 
 def sbox(byte)
   column = byte.div(16)
@@ -121,7 +103,6 @@ def key_expansion(key)
       end
 =end
 
-
       temp = subWord(rotWord(temp)).zip(Rcon[i/Nk-1]).map { |array| array[0]^array[1] }
     elsif (Nk>6) and (i.modulo(Nk) == 4)
       temp = subWord(temp)
@@ -133,25 +114,72 @@ def key_expansion(key)
 
 end
 
-testKey = [96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129,
-31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244]
-result = key_expansion(testKey)
-result.each { |i| printInHex(i) }
+#testKey = [96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129, 31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244]
+#result = key_expansion(testKey)
+#result.each { |i| printInHex(i) }
 
 
-def add_round_key(block,expanded_key,round_num)
+def add_round_key(state,roundKey)
+  state.zip(roundKey).map { |pair| pair[0]^pair[1] }
+  state
 end
 
-def sub_bytes(block)
+def sub_bytes(state)
+  range(0..3).each { |i|
+    range(0..3).each { |j|
+      state[i][j] = sbox(state[i][j])
+    }
+  }
+  state
 end
 
-def shift_rows(block)
+def shift_rows(state)
+  range(0..3).each { |rowIndex|
+    tempRow = [0,0,0,0]
+    range(0..3).each { |colIndex|
+      newColIndex = colIndex - rowIndex
+      if newColIndex < 0
+        newColIndex += 4
+      end
+      tempRow[newColIndex] = state[colIndex]
+    }
+    state[rowIndex] = tempRow
+  }
+  state
 end
 
 def mix_columns(block)
 end
 
+def aes256encryptblock(block, key)
+  puts "aes256encryptblock hasn't been fully coded yet"
+  puts "the function mix_columns hasn't been implemented"
+  state = []
+  state.push(block[0..3])
+  state.push(block[4..7])
+  state.push(block[8..11])
+  state.push(block[12..15])
 
+  expandedKey = key_expansion(key)
+  roundKey0 = expandedKey[0..3]
+  state = add_round_key(block, roundKey0)
+  roundNum = 1
+  while roundNum <= (Nr - 1)
+    state = sub_bytes(state)
+    state = shift_rows(state)
+    state = mix_columns(state) #hasn't been done yet
+    state = add_round_key(block, expandedKey[4*roundNum..(4*roundNum + 3)])
+    roundNum += 1
+  end
+
+  state = sub_bytes(state)
+  state = shift_rows(state)
+  state = add_round_key(state, expandedKey[4*Nr..(4*Nr + 3)])
+
+  state
+end
+
+aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],"abc")
 
 
 def aes256decrypt(ciphertext, key)
