@@ -40,6 +40,17 @@ Rcon =[ #Round constant - used in key expansion
   [54,0,0,0]
 ]
 
+GaloisFieldReductionConstant = 283
+# need to use this to do multiplication in the Galois Field (2^8)
+# 283 in binary is 1 0001 1011 which represents the polynomial x^8 + x^4 + x^3 + x + 1
+
+MixColumnsConstant = [
+  [2,3,1,1],
+  [1,2,3,1],
+  [1,1,2,3],
+  [3,1,1,2]
+]
+
 def aes256encrypt(plaintext, key)
   plaintext = pad_message(plaintext)
   asciiArray = string_to_ascii(plaintext)
@@ -148,8 +159,52 @@ def shift_rows(state)
   state
 end
 
-def mix_columns(block)
+def xTimes(number)
+  # multiplies by two in the Galois field 2^8
+  if number.div(128)==0
+    number*2
+  else
+    (number*2)^GaloisFieldReductionConstant
+  end
 end
+
+def galoisTimes(number1, number2)
+  # multiply two numbers in the galois field 2^8
+  sum = 0
+  index = 0
+  while number2 > 0
+    remainder = number2 % 2
+    if remainder == 1
+      temp = number1
+      index.times do |i|
+        temp = xTimes(temp)
+      end
+      sum = sum^temp
+    end
+    number2 = number2 / 2
+    index += 1
+  end
+  sum
+end
+
+def mix_columns(state)
+  result = [0,0,0,0]
+  (0..3).each do |i|
+    row = MixColumnsConstant[i]
+    sum = 0
+    (0..3).each do |j|
+      sum = sum^galoisTimes(state[j],row[j])
+    end
+    result[i] = sum
+  end
+  result
+end
+
+#puts mix_columns([99, 71, 162, 240])
+#puts mix_columns([242, 10, 34, 92 ])
+#puts mix_columns([ 	198, 198, 198, 198])
+#puts mix_columns([212, 212, 212, 213])
+#puts mix_columns([45, 38, 49, 76 ])
 
 def aes256encryptblock(block, key)
   puts "aes256encryptblock hasn't been fully coded yet"
@@ -179,7 +234,7 @@ def aes256encryptblock(block, key)
   state
 end
 
-aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],"abc")
+#aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],"abc")
 
 
 def aes256decrypt(ciphertext, key)
