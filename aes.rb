@@ -267,6 +267,7 @@ def aes256encrypt(plaintext, key, unconvertedText=TrueClass)
   ciphertext
 end
 
+=begin
 plainText = "6BC1BEE2 2E409F96 E93D7E11 7393172A
 AE2D8A57 1E03AC9C 9EB76FAC 45AF8E51
 30C81C46 A35CE411 E5FBC119 1A0A52EF
@@ -276,6 +277,7 @@ key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".
 result = aes256encrypt(hex_to_dec_array(plainText),hex_to_dec_array(key), FalseClass)
 puts "result is: "
 printInHex(result)
+=end
 
 
 def aes256decrypt(ciphertext, key)
