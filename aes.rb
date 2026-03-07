@@ -250,9 +250,12 @@ def aes256encryptblock(block, key)
   state
 end
 
-result = aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129, 31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244])
-puts "result is #{result}"
+block = "6BC1BEE2 2E409F96 E93D7E11 7393172A".split.join("")
+key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
 
+result = aes256encryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
+puts "result is: "
+printInHex(result)
 def aes256decrypt(ciphertext, key)
 end
 

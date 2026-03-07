@@ -28,6 +28,7 @@ def ascii_to_string(ascii)
 end
 
 def printInHex(intArray)
+  intArray = intArray.flatten
   i = 0
   hexArray = []
   while i < intArray.length
@@ -43,6 +44,16 @@ def printInHex(intArray)
     printf "%s%s%s%s\n", hexArray[i],hexArray[i+1],hexArray[i+2],hexArray[i+3]
     i += 4
   end
+end
+
+def hex_to_dec_array(hex)
+  decArray = []
+  (0..(hex.length/2 - 1)).each { |i|
+    hexNum = hex[i*2..i*2+1]
+    decNum = hexNum.to_i(16)
+    decArray[i] = decNum
+  }
+  decArray
 end
 
 
