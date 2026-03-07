@@ -131,13 +131,17 @@ end
 
 
 def add_round_key(state,roundKey)
-  state.zip(roundKey).map { |pair| pair[0]^pair[1] }
+  (0..3).each do |i|
+    (0..3).each do |j|
+      state[i][j] = state[i][j]^roundKey[i][j]
+    end
+  end
   state
 end
 
 def sub_bytes(state)
-  range(0..3).each { |i|
-    range(0..3).each { |j|
+  (0..3).each { |i|
+    (0..3).each { |j|
       state[i][j] = sbox(state[i][j])
     }
   }
@@ -145,14 +149,14 @@ def sub_bytes(state)
 end
 
 def shift_rows(state)
-  range(0..3).each { |rowIndex|
+  (0..3).each { |rowIndex|
     tempRow = [0,0,0,0]
-    range(0..3).each { |colIndex|
+    (0..3).each { |colIndex|
       newColIndex = colIndex - rowIndex
       if newColIndex < 0
         newColIndex += 4
       end
-      tempRow[newColIndex] = state[colIndex]
+      tempRow[newColIndex] = state[rowIndex][colIndex]
     }
     state[rowIndex] = tempRow
   }
@@ -187,28 +191,40 @@ def galoisTimes(number1, number2)
   sum
 end
 
-def mix_columns(state)
+def mix_single_column(column)
   result = [0,0,0,0]
   (0..3).each do |i|
     row = MixColumnsConstant[i]
     sum = 0
     (0..3).each do |j|
-      sum = sum^galoisTimes(state[j],row[j])
+      sum = sum^galoisTimes(column[j],row[j])
     end
     result[i] = sum
   end
   result
 end
 
-#puts mix_columns([99, 71, 162, 240])
+def mix_columns(state)
+  (0..3).each do |i|
+    column = [state[0][i], state[1][i], state[2][i], state[3][i]]
+    mixedColumn = mix_single_column(column)
+    state[0][i] = mixedColumn[0]
+    state[1][i] = mixedColumn[1]
+    state[2][i] = mixedColumn[2]
+    state[3][i] = mixedColumn[3]
+  end
+  state
+end
+
+#puts mix_single_column([99, 71, 162, 240])
 #puts mix_columns([242, 10, 34, 92 ])
-#puts mix_columns([ 	198, 198, 198, 198])
+#puts mix_columns([198, 198, 198, 198])
 #puts mix_columns([212, 212, 212, 213])
 #puts mix_columns([45, 38, 49, 76 ])
+#
 
 def aes256encryptblock(block, key)
-  puts "aes256encryptblock hasn't been fully coded yet"
-  puts "the function mix_columns hasn't been implemented"
+  puts "aes256encryptblock hasn't been bugchecked yet"
   state = []
   state.push(block[0..3])
   state.push(block[4..7])
@@ -217,13 +233,13 @@ def aes256encryptblock(block, key)
 
   expandedKey = key_expansion(key)
   roundKey0 = expandedKey[0..3]
-  state = add_round_key(block, roundKey0)
+  state = add_round_key(state, roundKey0)
   roundNum = 1
   while roundNum <= (Nr - 1)
     state = sub_bytes(state)
     state = shift_rows(state)
-    state = mix_columns(state) #hasn't been done yet
-    state = add_round_key(block, expandedKey[4*roundNum..(4*roundNum + 3)])
+    state = mix_columns(state)
+    state = add_round_key(state, expandedKey[4*roundNum..(4*roundNum + 3)])
     roundNum += 1
   end
 
@@ -234,8 +250,8 @@ def aes256encryptblock(block, key)
   state
 end
 
-#aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],"abc")
-
+result = aes256encryptblock([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[96, 61, 235, 16, 21, 202, 113, 190, 43, 115, 174, 240, 133, 125, 119, 129, 31, 53, 44, 7, 59, 97, 8, 215, 45, 152, 16, 163, 9, 20, 223, 244])
+puts "result is #{result}"
 
 def aes256decrypt(ciphertext, key)
 end
