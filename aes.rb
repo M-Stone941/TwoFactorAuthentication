@@ -52,6 +52,7 @@ MixColumnsConstant = [
 ]
 
 def aes256encrypt(plaintext, key)
+  puts "aesEncrypt hasn't been bugchecked yet"
   plaintext = pad_message(plaintext)
   asciiArray = string_to_ascii(plaintext)
   block_count = asciiArray.length/16
@@ -149,18 +150,14 @@ def sub_bytes(state)
 end
 
 def shift_rows(state)
-  (0..3).each { |rowIndex|
-    tempRow = [0,0,0,0]
-    (0..3).each { |colIndex|
-      newColIndex = colIndex - rowIndex
-      if newColIndex < 0
-        newColIndex += 4
-      end
-      tempRow[newColIndex] = state[rowIndex][colIndex]
+  newState = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+  (0..3).each { |i|
+    (0..3).each { |j|
+      new_i = (i-j)%4
+      newState[new_i][j] = state[i][j]
     }
-    state[rowIndex] = tempRow
   }
-  state
+  newState
 end
 
 def xTimes(number)
@@ -206,12 +203,12 @@ end
 
 def mix_columns(state)
   (0..3).each do |i|
-    column = [state[0][i], state[1][i], state[2][i], state[3][i]]
+    column = [state[i][0],state[i][1],state[i][2],state[i][3]]
     mixedColumn = mix_single_column(column)
-    state[0][i] = mixedColumn[0]
-    state[1][i] = mixedColumn[1]
-    state[2][i] = mixedColumn[2]
-    state[3][i] = mixedColumn[3]
+    state[i][0] = mixedColumn[0]
+    state[i][1] = mixedColumn[1]
+    state[i][2] = mixedColumn[2]
+    state[i][3] = mixedColumn[3]
   end
   state
 end
@@ -224,7 +221,6 @@ end
 #
 
 def aes256encryptblock(block, key)
-  puts "aes256encryptblock hasn't been bugchecked yet"
   state = []
   state.push(block[0..3])
   state.push(block[4..7])
@@ -234,12 +230,22 @@ def aes256encryptblock(block, key)
   expandedKey = key_expansion(key)
   roundKey0 = expandedKey[0..3]
   state = add_round_key(state, roundKey0)
+  #puts "After key addition" #correct
+  #printInHex(state)
   roundNum = 1
   while roundNum <= (Nr - 1)
     state = sub_bytes(state)
+    #puts "after subbytes" #correct
+    #printInHex(state)
     state = shift_rows(state)
+    #puts "After shift rows"
+    #printInHex(state) #correct
     state = mix_columns(state)
+    #puts "After mix columns"
+    #printInHex(state) #correct
     state = add_round_key(state, expandedKey[4*roundNum..(4*roundNum + 3)])
+    #puts "After round #{roundNum}" #correct
+    #printInHex(state)
     roundNum += 1
   end
 

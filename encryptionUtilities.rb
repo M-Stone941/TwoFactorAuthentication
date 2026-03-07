@@ -41,9 +41,10 @@ def printInHex(intArray)
   end
   i = 0
   while i < hexArray.length
-    printf "%s%s%s%s\n", hexArray[i],hexArray[i+1],hexArray[i+2],hexArray[i+3]
+    printf "%s%s%s%s ", hexArray[i],hexArray[i+1],hexArray[i+2],hexArray[i+3]
     i += 4
   end
+  print "\n"
 end
 
 def hex_to_dec_array(hex)
