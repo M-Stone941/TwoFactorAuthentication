@@ -51,20 +51,6 @@ MixColumnsConstant = [
   [3,1,1,2]
 ]
 
-def aes256encrypt(plaintext, key)
-  puts "aesEncrypt hasn't been bugchecked yet"
-  plaintext = pad_message(plaintext)
-  asciiArray = string_to_ascii(plaintext)
-  block_count = asciiArray.length/16
-  ciphertext = ""
-  (0..block_count - 1).each { |i|
-    block = asciiArray[i... i + 15]
-    ciphertext += aes256encryptblock(block, key)
-  }
-end
-
-
-
 def sbox(byte)
   column = byte.div(16)
   row = byte.modulo(16)
@@ -256,12 +242,42 @@ def aes256encryptblock(block, key)
   state
 end
 
-block = "6BC1BEE2 2E409F96 E93D7E11 7393172A".split.join("")
+#block = "6BC1BEE2 2E409F96 E93D7E11 7393172A".split.join("")
+#key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
+
+#result = aes256encryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
+#puts "result is: "
+#printInHex(result)
+
+def aes256encrypt(plaintext, key, unconvertedText=TrueClass)
+  intArray = []
+  if unconvertedText==TrueClass
+    plaintext = pad_message(plaintext)
+    intArray = string_to_ascii(plaintext)
+  else
+    intArray = plaintext
+  end
+  block_count = intArray.length/16
+  ciphertext = []
+  (0..block_count - 1).each { |i|
+    block = intArray[i*16..i*16 + 15]
+    encryptedBlock = aes256encryptblock(block, key)
+    ciphertext.push(encryptedBlock)
+  }
+  ciphertext
+end
+
+plainText = "6BC1BEE2 2E409F96 E93D7E11 7393172A
+AE2D8A57 1E03AC9C 9EB76FAC 45AF8E51
+30C81C46 A35CE411 E5FBC119 1A0A52EF
+F69F2445 DF4F9B17 AD2B417B E66C3710".split.join("")
 key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
 
-result = aes256encryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
+result = aes256encrypt(hex_to_dec_array(plainText),hex_to_dec_array(key), FalseClass)
 puts "result is: "
 printInHex(result)
+
+
 def aes256decrypt(ciphertext, key)
 end
 
@@ -290,7 +306,7 @@ def aes_encryption_menu
   end
   printf "Your key is: %s\n", key
   puts "You will need to save the key in order to decrypt the message.\n\n"
-  printf "The encrypted message is %s\n\n",aes256encrypt(plaintext, key)
+  printf "The encrypted message is %s\n\n",aes256encrypt(plaintext, string_to_ascii(key))
 end
 
 def aes_decryption_menu
