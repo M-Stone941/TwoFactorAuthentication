@@ -101,8 +101,8 @@ def rotWord(word)
   rotatedWord
 end
 
-def subWord(word)
-  [sbox(word[0]), sbox(word[1]), sbox(word[2]), sbox(word[3])]
+def subWord(word,inverse)
+  [sbox(word[0],inverse), sbox(word[1],inverse), sbox(word[2],inverse), sbox(word[3],inverse)]
 end
 
 def key_expansion(key)
@@ -136,9 +136,9 @@ def key_expansion(key)
       end
 =end
 
-      temp = subWord(rotWord(temp)).zip(Rcon[i/Nk-1]).map { |array| array[0]^array[1] }
+      temp = subWord(rotWord(temp),FalseClass).zip(Rcon[i/Nk-1]).map { |array| array[0]^array[1] }
     elsif (Nk>6) and (i.modulo(Nk) == 4)
-      temp = subWord(temp)
+      temp = subWord(temp, FalseClass)
     end
     expandedKey[i] = expandedKey[i-Nk].zip(temp).map { |array| array[0]^array[1] }
     i += 1
@@ -336,7 +336,7 @@ def aes256decryptblock(block, key)
 
   expandedKey = key_expansion(key)
   state = add_round_key(state, expandedKey[4*Nr..(4*Nr + 3)])
-  Nr.step(1, -1) do |round|
+  (Nr-1).step(1, -1) do |round|
     state = shift_rows(state,inverse=TrueClass)
     state = sub_bytes(state,inverse=TrueClass)
     state = add_round_key(state, expandedKey[4*round..(4*round + 3)])
@@ -348,9 +348,9 @@ def aes256decryptblock(block, key)
   state
 end
 
-block = "6BC1BEE2 2E409F96 E93D7E11 7393172A".split.join("")
-key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
-aes256decryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
+#block = "F3EED1BD B5D2A03C 064B5A7E 3DB181F8".split.join("")
+#key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
+#printInHex(aes256decryptblock(hex_to_dec_array(block),hex_to_dec_array(key)))
 
 def aes256decrypt(ciphertext, key)
   block_count = ciphertext.length/16
@@ -362,6 +362,17 @@ def aes256decrypt(ciphertext, key)
   }
   plaintext
 end
+
+=begin
+cipherText = "F3EED1BD B5D2A03C 064B5A7E 3DB181F8
+591CCB10 D410ED26 DC5BA74A 31362870
+B6ED21B9 9CA6F4F9 F153E7B1 BEAFED1D
+23304B7A 39F9F3FF 067D8D8F 9E24ECC7".split.join("")
+key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
+result = aes256decrypt(hex_to_dec_array(cipherText),hex_to_dec_array(key))
+puts "result is: "
+printInHex(result)
+=end
 
 def aes_encryption_menu
   puts "Please enter the message to be encrypted: "
