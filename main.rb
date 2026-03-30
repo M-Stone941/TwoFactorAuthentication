@@ -25,6 +25,8 @@ def encryption_menu
     response = gets.chomp
     if response == "1"
       aes_encryption_menu
+      printf("************\n")
+      running = FalseClass
     elsif response == "2"
       running = FalseClass
     end

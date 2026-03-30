@@ -24,6 +24,29 @@ SBOXDECIMAL = SBOXHEX.map do |a|
   a.map { |x|x.to_i(16) }
 end
 
+INVERSESBOXHEX = [
+  %w[52 	09 	6a 	d5 	30 	36 	a5 	38 	bf 	40 	a3 	9e 	81 	f3 	d7 	fb],
+ 	%w[7c 	e3 	39 	82 	9b 	2f 	ff 	87 	34 	8e 	43 	44 	c4 	de 	e9 	cb],
+ 	%w[54 	7b 	94 	32 	a6 	c2 	23 	3d 	ee 	4c 	95 	0b 	42 	fa 	c3 	4e],
+ 	%w[08 	2e 	a1 	66 	28 	d9 	24 	b2 	76 	5b 	a2 	49 	6d 	8b 	d1 	25],
+ 	%w[72 	f8 	f6 	64 	86 	68 	98 	16 	d4 	a4 	5c 	cc 	5d 	65 	b6 	92],
+ 	%w[6c 	70 	48 	50 	fd 	ed 	b9 	da 	5e 	15 	46 	57 	a7 	8d 	9d 	84],
+ 	%w[90 	d8 	ab 	00 	8c 	bc 	d3 	0a 	f7 	e4 	58 	05 	b8 	b3 	45 	06],
+ 	%w[d0 	2c 	1e 	8f 	ca 	3f 	0f 	02 	c1 	af 	bd 	03 	01 	13 	8a 	6b],
+ 	%w[3a 	91 	11 	41 	4f 	67 	dc 	ea 	97 	f2 	cf 	ce 	f0 	b4 	e6 	73],
+ 	%w[96 	ac 	74 	22 	e7 	ad 	35 	85 	e2 	f9 	37 	e8 	1c 	75 	df 	6e],
+ 	%w[47 	f1 	1a 	71 	1d 	29 	c5 	89 	6f 	b7 	62 	0e 	aa 	18 	be 	1b],
+ 	%w[fc 	56 	3e 	4b 	c6 	d2 	79 	20 	9a 	db 	c0 	fe 	78 	cd 	5a 	f4],
+ 	%w[1f 	dd 	a8 	33 	88 	07 	c7 	31 	b1 	12 	10 	59 	27 	80 	ec 	5f],
+ 	%w[60 	51 	7f 	a9 	19 	b5 	4a 	0d 	2d 	e5 	7a 	9f 	93 	c9 	9c 	ef],
+ 	%w[a0 	e0 	3b 	4d 	ae 	2a 	f5 	b0 	c8 	eb 	bb 	3c 	83 	53 	99 	61],
+ 	%w[17 	2b 	04 	7e 	ba 	77 	d6 	26 	e1 	69 	14 	63 	55 	21 	0c 	7d]
+]
+
+INVERSESBOXDECIMAL = INVERSESBOXHEX.map do |a|
+  a.map { |x|x.to_i(16) }
+end
+
 Nk = 8 #number of words in key (each word is 4 characters ie 32 bits long)
 Nr = 14 #number of rounds that the algorithm is run
 
@@ -51,10 +74,22 @@ MixColumnsConstant = [
   [3,1,1,2]
 ]
 
-def sbox(byte)
+InverseMixColumnsConstant = [
+  [14,11,13,9],
+  [9,14,11,13],
+  [13,9,14,11],
+  [11,13,9,14]
+]
+
+def sbox(byte, inverse)
   column = byte.div(16)
   row = byte.modulo(16)
-  SBOXDECIMAL[column][row]
+  if inverse==FalseClass
+    result = SBOXDECIMAL[column][row]
+  else
+    result = INVERSESBOXDECIMAL[column][row]
+  end
+  result
 end
 
 def rotWord(word)
@@ -126,24 +161,33 @@ def add_round_key(state,roundKey)
   state
 end
 
-def sub_bytes(state)
+def sub_bytes(state,inverse=FalseClass)
   (0..3).each { |i|
     (0..3).each { |j|
-      state[i][j] = sbox(state[i][j])
+      state[i][j] = sbox(state[i][j], inverse)
     }
   }
   state
 end
 
-def shift_rows(state)
+def shift_rows(state, inverse=FalseClass)
   newState = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-  (0..3).each { |i|
-    (0..3).each { |j|
-      new_i = (i-j)%4
-      newState[new_i][j] = state[i][j]
+  if inverse==FalseClass
+    (0..3).each { |i|
+      (0..3).each { |j|
+        new_i = (i-j)%4
+        newState[new_i][j] = state[i][j]
+      }
     }
-  }
-  newState
+  else
+      (0..3).each { |i|
+        (0..3).each { |j|
+          new_i = (i+j)%4
+          newState[new_i][j] = state[i][j]
+        }
+      }
+  end
+    newState
 end
 
 def xTimes(number)
@@ -174,10 +218,14 @@ def galoisTimes(number1, number2)
   sum
 end
 
-def mix_single_column(column)
+def mix_single_column(column,inverse)
   result = [0,0,0,0]
   (0..3).each do |i|
-    row = MixColumnsConstant[i]
+    if inverse==FalseClass
+      row = MixColumnsConstant[i]
+    else
+      row = InverseMixColumnsConstant[i]
+    end
     sum = 0
     (0..3).each do |j|
       sum = sum^galoisTimes(column[j],row[j])
@@ -187,10 +235,10 @@ def mix_single_column(column)
   result
 end
 
-def mix_columns(state)
+def mix_columns(state, inverse=FalseClass)
   (0..3).each do |i|
     column = [state[i][0],state[i][1],state[i][2],state[i][3]]
-    mixedColumn = mix_single_column(column)
+    mixedColumn = mix_single_column(column,inverse)
     state[i][0] = mixedColumn[0]
     state[i][1] = mixedColumn[1]
     state[i][2] = mixedColumn[2]
@@ -279,14 +327,46 @@ puts "result is: "
 printInHex(result)
 =end
 
+def aes256decryptblock(block, key)
+  state = []
+  state.push(block[0..3])
+  state.push(block[4..7])
+  state.push(block[8..11])
+  state.push(block[12..15])
+
+  expandedKey = key_expansion(key)
+  state = add_round_key(state, expandedKey[4*Nr..(4*Nr + 3)])
+  Nr.step(1, -1) do |round|
+    state = shift_rows(state,inverse=TrueClass)
+    state = sub_bytes(state,inverse=TrueClass)
+    state = add_round_key(state, expandedKey[4*round..(4*round + 3)])
+    state = mix_columns(state,inverse=TrueClass)
+  end
+  state = shift_rows(state,inverse=TrueClass)
+  state = sub_bytes(state,inverse=TrueClass)
+  state = add_round_key(state, expandedKey[0..3])
+  state
+end
+
+block = "6BC1BEE2 2E409F96 E93D7E11 7393172A".split.join("")
+key = "603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4".split.join("")
+aes256decryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
 
 def aes256decrypt(ciphertext, key)
+  block_count = ciphertext.length/16
+  plaintext = []
+  (0..block_count - 1).each { |i|
+    block = ciphertext[i*16..i*16 + 15]
+    decryptedBlock = aes256decryptblock(block, key)
+    plaintext.push(decryptedBlock)
+  }
+  plaintext
 end
 
 def aes_encryption_menu
   puts "Please enter the message to be encrypted: "
   plaintext = gets.chomp
-  puts "Would you like to choose a 16 character key yourself, or have one randomly generated?"
+  puts "Would you like to choose a 32 character key yourself, or have one randomly generated?"
   response = ""
   while (response != "1") and (response != "2")
     puts "Press 1 to choose your own key, or press 2 to have one automatically generated:"
@@ -294,27 +374,51 @@ def aes_encryption_menu
   end
   if response == "1"
     key = ""
-    while key.length != 16
-      puts "Please enter a 16 character key to encrypt the message with:"
+    while key.length != 32
+      puts "Please enter a 32 character key to encrypt the message with:"
       key = gets.chomp
-      if key.length < 16
+      if key.length < 32
         puts "That is too short to be a key"
-      elsif key.length > 16
+      elsif key.length > 32
         puts "That is too long to be a key"
       end
     end
   else
-    key = SecureRandom.alphanumeric(16)
+    key = SecureRandom.alphanumeric(32)
   end
   printf "Your key is: %s\n", key
   puts "You will need to save the key in order to decrypt the message.\n\n"
-  printf "The encrypted message is %s\n\n",aes256encrypt(plaintext, string_to_ascii(key))
+  puts "The encrypted message is: \n"
+  printInHex(aes256encrypt(plaintext, string_to_ascii(key)))
 end
 
 def aes_decryption_menu
-  puts "Please enter the message to be decrypted: "
-  ciphertext = gets.chomp
-  puts "Please enter the key used to encrypt the message:"
-  key = gets.chomp
-  aes256decrypt(ciphertext, key)
+  ciphertextDone = FalseClass
+  while ciphertextDone != TrueClass
+    puts "Please enter the message to be decrypted."
+    puts "It should be written in a hexadecimal format"
+    puts "This means that it should use the digits 0-9 and letters a-f only."
+    ciphertext = gets.chomp
+    ciphertext = ciphertext.split.join("")
+    ciphertext = ciphertext.downcase
+    if ciphertext =~ /^[0123456789abcdef]+$/
+      ciphertext = hex_to_dec_array(ciphertext)
+      ciphertextDone = TrueClass
+    end
+    key = ""
+    while key.length != 32
+      puts "Please enter the 32 character key that this message was encrypted with:"
+      key = gets.chomp
+      if key.length < 32
+        puts "That is too short"
+      elsif key.length > 32
+        puts "That is too long"
+      end
+    end
+
+    message = ascii_to_string(aes256decrypt(ciphertext, key))
+    message = unpad_message(message)
+    puts "The decrypted message is: #{message}"
+  end
+
 end
