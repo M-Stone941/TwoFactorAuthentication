@@ -67,7 +67,7 @@ end
 def rotateWordLeft(wordArray, rotationNum)
   # rotates a 32 bit word left by a given amount
   # the word is initially stored as an array of 4 integers with values within 0-255
-  word = wordArray[0]*(256^3) + wordArray[1]*(256^2) + wordArray[2]*256 + wordArray[3]
+  word = wordToSingleInt(wordArray)
   # now it's a single integer between 0 and (2^32-1)
   for i in 0...rotationNum
     word = word*2
@@ -76,7 +76,25 @@ def rotateWordLeft(wordArray, rotationNum)
       word = word + 1
     end
   end
-  word
+  wordToArray(word)
+end
+
+def wordToSingleInt(wordAsArray)
+  # converts word as an array of 4 ints 0...256, to a single integer 0...(2^32)
+  wordAsArray[0]*(256^3) + wordAsArray[1]*(256^2) + wordAsArray[2]*256 + wordAsArray[3]
+end
+
+def wordToArray(wordAsInt)
+  # converts word represented as a single integer 0...(2^32) to an array of 4 ints 0...256
+  wordAsArray = [0,0,0,0]
+  wordAsArray[0] = wordAsInt.div(256^3)
+  wordAsInt = wordAsInt.modulo(256^3)
+  wordAsArray[1] = wordAsInt.div(256^2)
+  wordAsInt = wordAsInt.modulo(256^2)
+  wordAsArray[2] = wordAsInt.div(256)
+  wordAsInt = wordAsInt.modulo(256)
+  wordAsArray[3]  = wordAsInt
+  wordAsArray
 end
 
 def permutation(x,q)
@@ -139,7 +157,19 @@ def twofishF(r0,r1,roundNum)
   [f0, f1]
 end
 
-
+def keyExpansion(mEven,mOdd)
+  rho = 2^24 + 2^16 + 2^8 +2^0
+  expandedKey = Array.new(40)
+  (0..19).each { |i|
+    a = twofishH(wordToArray(2 * i * rho), mEven)
+    a = wordToSingleInt(a)
+    b = rotateWordLeft(h(wordToArray((2 * i + 1) * rho), mOdd), 8)
+    b = wordToSingleInt(b)
+    expandedKey[2 * i] = (a + b).modulo(2 ^ 32)
+    expandedKey[2 * i + 1] = rotateWordLeft((a + 2 * b).modulo(2 ^ 32), 9)
+  }
+  expandedKey
+end
 
 def twofishH(x,l)
   # x is a word - 32bytes represented as an array of 4 integers, each in range 0-255
@@ -175,11 +205,7 @@ def twofishH(x,l)
   x[2] = permutation(x[2],1)
   x[3] = permutation(x[3],0)
 
-  x = column_vector(x)
-  mdsMatrix = Matrix(MSDECIMAL)
-
-  result = x*mdsMatrix
-  result.to_a
+  galoisMatrixMultiply(x, MSDECIMAL)
 end
 
 def twofish_encrypt_block(block,key)

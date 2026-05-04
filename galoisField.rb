@@ -43,9 +43,9 @@ def galoisMatrixMultiply (array1, array2)
         sum = 0
         for k in 0...array1.size[1]
           sum = sum + galoisTimes(array1[i][k],array2[k][j])
-        end
-        while sum.div(256)!=0
-          sum = sum^GaloisFieldReductionConstant
+          if sum.div(256)>0
+            sum = sum^GaloisFieldReductionConstant
+          end
         end
         resultArrayRow[i][j] = sum
       end
