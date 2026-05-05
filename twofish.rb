@@ -71,8 +71,8 @@ def rotateWordLeft(wordArray, rotationNum)
   # now it's a single integer between 0 and (2^32-1)
   for i in 0...rotationNum
     word = word*2
-    if word > (2^32)
-      word = word - (2^32)
+    if word > (2**32)
+      word = word - (2**32)
       word = word + 1
     end
   end
@@ -151,9 +151,11 @@ def twofish_key_schedule(key)
   [arrayMeven, arrayModd, arrayS]
 end
 
-def twofishF(r0,r1,roundNum)
-  f0 =r0
-  f1=r1
+def twofishF(r0,r1,roundNum,expandedKey,arrayS)
+  t0 = wordToSingleInt(h(r0,arrayS))
+  t1 = wordToSingleInt(h(rotateWordLeft(r1,8),arrayS))
+  f0 = wordToArray((t0^t1^wordToSingleInt(expandedKey[(2*roundNum)+8]).modulo(2**32)))
+  f1 = wordToArray((t0^(2*t1)^wordToSingleInt(expandedKey[(2*roundNum)+9]).modulo(2**32)))
   [f0, f1]
 end
 
@@ -209,10 +211,20 @@ def twofishH(x,l)
 end
 
 def twofish_encrypt_block(block,key)
-  #input whiten
-  # 16 rounds
-  # unswap
-  # output whiten
+  wordsArray = block.each_slice(4).to_a
+
+  mEven,mOdd,arrayS = twofish_key_schedule(key)
+  expandedKey = keyExpansion(mEven,mOdd)
+
+  #Input whitening
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(key[0]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(key[1]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(key[2]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(key[3]))
+
+  (0...16).each { |i|
+
+  }
 end
 def twofish_encrypt(message,key)
 
