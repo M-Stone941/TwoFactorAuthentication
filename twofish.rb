@@ -53,14 +53,14 @@ Q1SBOXES = [Q1SBOX0, Q1SBOX1, Q1SBOX2, Q1SBOX3]
 def rotateNibbleRight(nibbleInt, rotationNum)
   #rotates a nibble (4 bits) to the right by a given amount
   # e.g. 13 is 1101 in binary, rotating it right by 1 gives 1110 which is 14
-  for i in 0...rotationNum
-    if nibbleInt.modulo(2)==0
-      nibbleInt = nibbleInt/2
+  (0...rotationNum).each { |i|
+    if nibbleInt.modulo(2) == 0
+      nibbleInt = nibbleInt / 2
     else
-      nibbleInt = nibbleInt/2
-      nibbleInt = nibbleInt+8
+      nibbleInt = (nibbleInt-1) / 2
+      nibbleInt = nibbleInt + 8
     end
-  end
+  }
   nibbleInt
 end
 
@@ -69,11 +69,27 @@ def rotateWordLeft(wordArray, rotationNum)
   # the word is initially stored as an array of 4 integers with values within 0-255
   word = wordToSingleInt(wordArray)
   # now it's a single integer between 0 and (2^32-1)
-  for i in 0...rotationNum
-    word = word*2
-    if word > (2**32)
-      word = word - (2**32)
+  (0...rotationNum).each { |i|
+    word = word * 2
+    if word > (2 ** 32)
+      word = word - (2 ** 32)
       word = word + 1
+    end
+  }
+  wordToArray(word)
+end
+
+def rotateWordRight(wordArray, rotationNum)
+  # rotates a 32 bit word right by a given amount
+  # the word is initially stored as an array of 4 integers with values within 0-255
+  word = wordToSingleInt(wordArray)
+  # now it's a single integer between 0 and (2^32-1)
+  (0...rotationNum).each do |i|
+    if word.modulo(2) == 0
+      word = word / 2
+    else
+      word = (word-1)/2
+      word = word + 2^31
     end
   end
   wordToArray(word)
@@ -223,8 +239,27 @@ def twofish_encrypt_block(block,key)
   wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(key[3]))
 
   (0...16).each { |i|
+    wordsArray[0],wordsArray[1] = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
+    wordsArray[2] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(wordsArray[0])),1)
+    wordsArray[3] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[3],1))^wordToSingleInt(wordsArray[1]))
 
+    #swap halves
+    tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
+    wordsArray = tempWordsArray
   }
+
+  #Output whitening
+
+  #swap back
+  tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
+  wordsArray = tempWordsArray
+
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(key[4]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(key[5]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(key[6]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(key[7]))
+
+  wordsArray
 end
 def twofish_encrypt(message,key)
 
