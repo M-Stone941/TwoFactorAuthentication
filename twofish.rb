@@ -28,25 +28,17 @@ MSDECIMAL = MDS.map do |a|
   a.map { |x|x.to_i(16) }
 end
 
-Q0SBOX0 = %w[ 8, 1, 7, D, 6, F, 3, 2, 0, B, 5, 9, E, C, A, 4 ]
-Q0SBOX0.map { |x|x.to_i(16) }
-Q0SBOX1 = %w[ E, C, B, 8, 1, 2, 3, 5, F, 4, A, 6, 7, 0, 9, D ]
-Q0SBOX1.map { |x|x.to_i(16) }
-Q0SBOX2 = %w[ B, A, 5, E, 6, D, 9, 0, C, 8, F, 3, 2, 4, 7, 1 ]
-Q0SBOX2.map { |x|x.to_i(16) }
-Q0SBOX3 = %w[ D, 7, F, 4, 1, 2, 6, E, 9, B, 3, 0, 8, 5, C, A ]
-Q0SBOX3.map { |x|x.to_i(16) }
+Q0SBOX0 = %w[ 8, 1, 7, D, 6, F, 3, 2, 0, B, 5, 9, E, C, A, 4 ].map { |x|x.to_i(16) }
+Q0SBOX1 = %w[ E, C, B, 8, 1, 2, 3, 5, F, 4, A, 6, 7, 0, 9, D ].map { |x|x.to_i(16) }
+Q0SBOX2 = %w[ B, A, 5, E, 6, D, 9, 0, C, 8, F, 3, 2, 4, 7, 1 ].map { |x|x.to_i(16) }
+Q0SBOX3 = %w[ D, 7, F, 4, 1, 2, 6, E, 9, B, 3, 0, 8, 5, C, A ].map { |x|x.to_i(16) }
 
 Q0SBOXES = [Q0SBOX0, Q0SBOX1, Q0SBOX2, Q0SBOX3]
 
-Q1SBOX0 = %w[ 2, 8, B, D, F, 7, 6, E, 3, 1, 9, 4, 0, A, C, 5 ]
-Q1SBOX0.map { |x|x.to_i(16) }
-Q1SBOX1 = %w[ 1, E, 2, B, 4, C, 3, 7, 6, D, A, 5, F, 9, 0, 8 ]
-Q1SBOX1.map { |x|x.to_i(16) }
-Q1SBOX2 = %w[ 4, C, 7, 5, 1, 6, 9, A, 0, E, D, 8, 2, B, 3, F ]
-Q1SBOX2.map { |x|x.to_i(16) }
-Q1SBOX3 = %w[ B, 9, 5, 1, C, 3, D, E, 6, 4, 7, F, 2, 0, 8, A ]
-Q1SBOX3.map { |x|x.to_i(16) }
+Q1SBOX0 = %w[ 2, 8, B, D, F, 7, 6, E, 3, 1, 9, 4, 0, A, C, 5 ].map { |x|x.to_i(16) }
+Q1SBOX1 = %w[ 1, E, 2, B, 4, C, 3, 7, 6, D, A, 5, F, 9, 0, 8 ].map { |x|x.to_i(16) }
+Q1SBOX2 = %w[ 4, C, 7, 5, 1, 6, 9, A, 0, E, D, 8, 2, B, 3, F ].map { |x|x.to_i(16) }
+Q1SBOX3 = %w[ B, 9, 5, 1, C, 3, D, E, 6, 4, 7, F, 2, 0, 8, A ].map { |x|x.to_i(16) }
 
 Q1SBOXES = [Q1SBOX0, Q1SBOX1, Q1SBOX2, Q1SBOX3]
 
@@ -68,6 +60,7 @@ def rotateWordLeft(wordArray, rotationNum)
   # rotates a 32 bit word left by a given amount
   # the word is initially stored as an array of 4 integers with values within 0-255
   word = wordToSingleInt(wordArray)
+
   # now it's a single integer between 0 and (2^32-1)
   (0...rotationNum).each { |i|
     word = word * 2
@@ -89,7 +82,7 @@ def rotateWordRight(wordArray, rotationNum)
       word = word / 2
     else
       word = (word-1)/2
-      word = word + 2^31
+      word = word + 2**31
     end
   end
   wordToArray(word)
@@ -97,16 +90,16 @@ end
 
 def wordToSingleInt(wordAsArray)
   # converts word as an array of 4 ints 0...256, to a single integer 0...(2^32)
-  wordAsArray[0]*(256^3) + wordAsArray[1]*(256^2) + wordAsArray[2]*256 + wordAsArray[3]
+  wordAsArray[0]*(256**3) + wordAsArray[1]*(256**2) + wordAsArray[2]*256 + wordAsArray[3]
 end
 
 def wordToArray(wordAsInt)
   # converts word represented as a single integer 0...(2^32) to an array of 4 ints 0...256
   wordAsArray = [0,0,0,0]
-  wordAsArray[0] = wordAsInt.div(256^3)
-  wordAsInt = wordAsInt.modulo(256^3)
-  wordAsArray[1] = wordAsInt.div(256^2)
-  wordAsInt = wordAsInt.modulo(256^2)
+  wordAsArray[0] = wordAsInt.div(256**3)
+  wordAsInt = wordAsInt.modulo(256**3)
+  wordAsArray[1] = wordAsInt.div(256**2)
+  wordAsInt = wordAsInt.modulo(256**2)
   wordAsArray[2] = wordAsInt.div(256)
   wordAsInt = wordAsInt.modulo(256)
   wordAsArray[3]  = wordAsInt
@@ -128,7 +121,7 @@ def permutation(x,q)
   b0 = x.modulo(16)
   a1 = a0^b0
   b1 = a0^(rotateNibbleRight(b0,1))^((8*a0).modulo(16))
-  a2 = sboxs[0][a1]
+  a2 = sboxes[0][a1]
   b2 = sboxes[1][b1]
   a3 = a2^b2
   b3 =a2^(rotateNibbleRight(b2,1))^((8*a2).modulo(16))
@@ -139,7 +132,6 @@ def permutation(x,q)
 end
 
 def twofish_key_schedule(key)
-  key = stringToAscii(key)
   while key.length < (N/8)
     key.append(0)
   end
@@ -159,32 +151,46 @@ def twofish_key_schedule(key)
     end
   end
   arrayS = []
-  for i in 0..((2*K)-1)
-    word = wordsArray[i]
-    resultWord = galoisMatrixMultiply(word, RSDECIMAL)
-    arrayS.prepend(resultWord)
-  end
+  (0...(2 * K)).step(2).each { |i|
+
+    word = [
+      [wordsArray[i][0]],
+      [wordsArray[i][1]],
+      [wordsArray[i][2]],
+      [wordsArray[i][3]],
+      [wordsArray[i+1][0]],
+      [wordsArray[i+1][1]],
+      [wordsArray[i+1][2]],
+      [wordsArray[i+1][3]]
+    ]
+
+    resultWord = galoisMatrixMultiply(RSDECIMAL, word, constant="TwofishKey")
+    resultWord = [[resultWord[0][3],resultWord[0][2],resultWord[0][1],resultWord[0][0]]]
+    arrayS.append(resultWord)
+  }
+  arrayS = [arrayS[0][0], arrayS[1][0], arrayS[2][0], arrayS[3][0]]
+  p arrayS
+  printInHex(arrayS)
   [arrayMeven, arrayModd, arrayS]
 end
 
 def twofishF(r0,r1,roundNum,expandedKey,arrayS)
-  t0 = wordToSingleInt(h(r0,arrayS))
-  t1 = wordToSingleInt(h(rotateWordLeft(r1,8),arrayS))
+  t0 = wordToSingleInt(twofishH(r0,arrayS))
+  t1 = wordToSingleInt(twofishH(rotateWordLeft(r1,8),arrayS))
   f0 = wordToArray((t0^t1^wordToSingleInt(expandedKey[(2*roundNum)+8]).modulo(2**32)))
   f1 = wordToArray((t0^(2*t1)^wordToSingleInt(expandedKey[(2*roundNum)+9]).modulo(2**32)))
-  [f0, f1]
 end
 
 def keyExpansion(mEven,mOdd)
-  rho = 2^24 + 2^16 + 2^8 +2^0
+  rho = 2**24 + 2**16 + 2**8 +2**0
   expandedKey = Array.new(40)
   (0..19).each { |i|
     a = twofishH(wordToArray(2 * i * rho), mEven)
     a = wordToSingleInt(a)
-    b = rotateWordLeft(h(wordToArray((2 * i + 1) * rho), mOdd), 8)
+    b = rotateWordLeft(twofishH(wordToArray((2 * i + 1) * rho), mOdd), 8)
     b = wordToSingleInt(b)
-    expandedKey[2 * i] = (a + b).modulo(2 ^ 32)
-    expandedKey[2 * i + 1] = rotateWordLeft((a + 2 * b).modulo(2 ^ 32), 9)
+    expandedKey[2 * i] = wordToArray((a + b).modulo(2 ** 32))
+    expandedKey[2 * i + 1] = rotateWordLeft((a + 2 * b).modulo(2 ** 32), 9)
   }
   expandedKey
 end
@@ -192,38 +198,38 @@ end
 def twofishH(x,l)
   # x is a word - 32bytes represented as an array of 4 integers, each in range 0-255
   # l is a list of k words. k = 4 as I'm using a 256 bit key.
-  if k==4
+  if K==4
     x[0] = permutation(x[0],1)
     x[1] = permutation(x[1],0)
     x[2] = permutation(x[2],0)
     x[3] = permutation(x[3],1)
-    x = x.zip(l[3]).map {|i| a[i]^b[i]}
+    x = x.zip(l[3]).map {|(a,b)| a ^ b}
   end
-  if k>=3
+  if K>=3
     x[0] = permutation(x[0],1)
     x[1] = permutation(x[1],1)
     x[2] = permutation(x[2],0)
     x[3] = permutation(x[3],0)
-    x = x.zip(l[2]).map {|i| a[i]^b[i]}
+    x = x.zip(l[2]).map {|(a,b)| a ^ b}
   end
   x[0] = permutation(x[0],0)
   x[1] = permutation(x[1],1)
   x[2] = permutation(x[2],0)
   x[3] = permutation(x[3],1)
-  x = x.zip(l[1]).map {|i| a[i]^b[i]}
+  x = x.zip(l[1]).map {|(a,b)| a ^ b}
 
   x[0] = permutation(x[0],0)
   x[1] = permutation(x[1],0)
   x[2] = permutation(x[2],1)
   x[3] = permutation(x[3],1)
-  x = x.zip(l[0]).map {|i| a[i]^b[i]}
+  x = x.zip(l[0]).map {|(a,b)| a ^ b}
 
   x[0] = permutation(x[0],1)
   x[1] = permutation(x[1],0)
   x[2] = permutation(x[2],1)
   x[3] = permutation(x[3],0)
 
-  galoisMatrixMultiply(x, MSDECIMAL)
+  galoisMatrixMultiply(MSDECIMAL,[[x[0]],[x[1]],[x[2]],[x[3]]],"TwofishG")[0]
 end
 
 def twofish_encrypt_block(block,key)
@@ -233,10 +239,10 @@ def twofish_encrypt_block(block,key)
   expandedKey = keyExpansion(mEven,mOdd)
 
   #Input whitening
-  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(key[0]))
-  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(key[1]))
-  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(key[2]))
-  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(key[3]))
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt([key[0],key[1],key[2],key[3]]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt([key[4],key[5],key[6],key[7]]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt([key[8],key[9],key[10],key[11]]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt([key[12],key[13],key[14],key[15]]))
 
   (0...16).each { |i|
     wordsArray[0],wordsArray[1] = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
@@ -254,13 +260,19 @@ def twofish_encrypt_block(block,key)
   tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
   wordsArray = tempWordsArray
 
-  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(key[4]))
-  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(key[5]))
-  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(key[6]))
-  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(key[7]))
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt([key[16],key[17],key[18],key[19]]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt([key[20],key[21],key[22],key[23]]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt([key[24],key[25],key[26],key[27]]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt([key[28],key[29],key[30],key[31]]))
 
   wordsArray
 end
+
+key = hex_to_dec_array("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF")
+block = hex_to_dec_array("00000000000000000000000000000000")
+result = twofish_encrypt_block(block,key)
+printInHex(result)
+
 def twofish_encrypt(message,key)
 
 end
