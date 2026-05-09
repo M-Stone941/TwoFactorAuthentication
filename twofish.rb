@@ -72,6 +72,7 @@ def rotateWordLeft(wordArray, rotationNum)
   wordToArray(word)
 end
 
+#p rotateWordLeft([0,0,0,1],1)
 def rotateWordRight(wordArray, rotationNum)
   # rotates a 32 bit word right by a given amount
   # the word is initially stored as an array of 4 integers with values within 0-255
@@ -137,19 +138,20 @@ def twofish_key_schedule(key)
   end
   wordsArray = Array.new(2*K)
   for i in 0..((2*K)-1)
-    wordsArray[i] = [key[i*4],key[i*4+1],key[i*4+2],key[i*4+3]]
+    wordsArray[i] = [key[i*4+3],key[i*4+2],key[i*4+1],key[i*4]]
   end
   #wordsArray has 2K (which is 8) elements.
   # each element is an array of 4 numbers between 0-255 (representing 8 bits)
-  arrayMeven = []
-  arrayModd = []
-  for i in 0..((2*K)-1)
-    if (i.even?)
-      arrayMeven.append(wordsArray[i])
-    else
-      arrayModd.append(wordsArray[i])
-    end
-  end
+  arrayMeven = [wordsArray[0],wordsArray[2],wordsArray[4],wordsArray[6]]
+  arrayModd = [wordsArray[1],wordsArray[3],wordsArray[5],wordsArray[7]]
+
+  #  (0...(2 * K)).each { |i|
+  #  if (i.even?)
+  #    arrayMeven.append(wordsArray[i])
+  #  else
+  #    arrayModd.append(wordsArray[i])
+  #  end
+  #}
   arrayS = []
   (0...(2 * K)).step(2).each { |i|
 
@@ -169,8 +171,6 @@ def twofish_key_schedule(key)
     arrayS.append(resultWord)
   }
   arrayS = [arrayS[0][0], arrayS[1][0], arrayS[2][0], arrayS[3][0]]
-  p arrayS
-  printInHex(arrayS)
   [arrayMeven, arrayModd, arrayS]
 end
 
@@ -190,7 +190,7 @@ def keyExpansion(mEven,mOdd)
     b = rotateWordLeft(twofishH(wordToArray((2 * i + 1) * rho), mOdd), 8)
     b = wordToSingleInt(b)
     expandedKey[2 * i] = wordToArray((a + b).modulo(2 ** 32))
-    expandedKey[2 * i + 1] = rotateWordLeft((a + 2 * b).modulo(2 ** 32), 9)
+    expandedKey[2 * i + 1] = rotateWordLeft(wordToArray((a + 2 * b).modulo(2 ** 32)), 9)
   }
   expandedKey
 end
@@ -206,37 +206,42 @@ def twofishH(x,l)
     x = x.zip(l[3]).map {|(a,b)| a ^ b}
   end
   if K>=3
-    x[0] = permutation(x[0],1)
-    x[1] = permutation(x[1],1)
-    x[2] = permutation(x[2],0)
-    x[3] = permutation(x[3],0)
+    x[0] = permutation(x[0],0)
+    x[1] = permutation(x[1],0)
+    x[2] = permutation(x[2],1)
+    x[3] = permutation(x[3],1)
     x = x.zip(l[2]).map {|(a,b)| a ^ b}
   end
-  x[0] = permutation(x[0],0)
-  x[1] = permutation(x[1],1)
-  x[2] = permutation(x[2],0)
-  x[3] = permutation(x[3],1)
-  x = x.zip(l[1]).map {|(a,b)| a ^ b}
-
-  x[0] = permutation(x[0],0)
-  x[1] = permutation(x[1],0)
-  x[2] = permutation(x[2],1)
-  x[3] = permutation(x[3],1)
-  x = x.zip(l[0]).map {|(a,b)| a ^ b}
-
   x[0] = permutation(x[0],1)
   x[1] = permutation(x[1],0)
   x[2] = permutation(x[2],1)
   x[3] = permutation(x[3],0)
+  x = x.zip(l[1]).map {|(a,b)| a ^ b}
 
-  galoisMatrixMultiply(MSDECIMAL,[[x[0]],[x[1]],[x[2]],[x[3]]],"TwofishG")[0]
+  x[0] = permutation(x[0],1)
+  x[1] = permutation(x[1],1)
+  x[2] = permutation(x[2],0)
+  x[3] = permutation(x[3],0)
+  x = x.zip(l[0]).map {|(a,b)| a ^ b}
+
+  x[0] = permutation(x[0],0)
+  x[1] = permutation(x[1],1)
+  x[2] = permutation(x[2],0)
+  x[3] = permutation(x[3],1)
+  x = [x[3],x[2],x[1],x[0]]
+
+  x = galoisMatrixMultiply(MSDECIMAL,[[x[0]],[x[1]],[x[2]],[x[3]]],"TwofishG")[0]
+  [x[3], x[2], x[1], x[0]]
 end
 
 def twofish_encrypt_block(block,key)
   wordsArray = block.each_slice(4).to_a
 
   mEven,mOdd,arrayS = twofish_key_schedule(key)
+
   expandedKey = keyExpansion(mEven,mOdd)
+  puts "expandedkey is"
+  printInHex(expandedKey)
 
   #Input whitening
   wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt([key[0],key[1],key[2],key[3]]))
