@@ -155,18 +155,18 @@ def twofish_key_schedule(key)
   arrayS = []
   (0...(2 * K)).step(2).each { |i|
 
-    word = [
-      [wordsArray[i][0]],
-      [wordsArray[i][1]],
-      [wordsArray[i][2]],
+    wordPair = [
       [wordsArray[i][3]],
-      [wordsArray[i+1][0]],
-      [wordsArray[i+1][1]],
+      [wordsArray[i][2]],
+      [wordsArray[i][1]],
+      [wordsArray[i][0]],
+      [wordsArray[i+1][3]],
       [wordsArray[i+1][2]],
-      [wordsArray[i+1][3]]
+      [wordsArray[i+1][1]],
+      [wordsArray[i+1][0]]
     ]
 
-    resultWord = galoisMatrixMultiply(RSDECIMAL, word, constant="TwofishKey")
+    resultWord = galoisMatrixMultiply(RSDECIMAL, wordPair, constant="TwofishKey")
     resultWord = [[resultWord[0][3],resultWord[0][2],resultWord[0][1],resultWord[0][0]]]
     arrayS.append(resultWord)
   }
@@ -240,20 +240,21 @@ def twofish_encrypt_block(block,key)
   mEven,mOdd,arrayS = twofish_key_schedule(key)
 
   expandedKey = keyExpansion(mEven,mOdd)
-  puts "expandedkey is"
-  printInHex(expandedKey)
 
   #Input whitening
-  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt([key[0],key[1],key[2],key[3]]))
-  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt([key[4],key[5],key[6],key[7]]))
-  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt([key[8],key[9],key[10],key[11]]))
-  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt([key[12],key[13],key[14],key[15]]))
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[0]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(expandedKey[1]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(expandedKey[2]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(expandedKey[3]))
+  #puts "after whitening"
+  #p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
 
   (0...16).each { |i|
     wordsArray[0],wordsArray[1] = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
     wordsArray[2] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(wordsArray[0])),1)
     wordsArray[3] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[3],1))^wordToSingleInt(wordsArray[1]))
-
+    #puts "after round",i
+    #p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
     #swap halves
     tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
     wordsArray = tempWordsArray
@@ -265,10 +266,10 @@ def twofish_encrypt_block(block,key)
   tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
   wordsArray = tempWordsArray
 
-  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt([key[16],key[17],key[18],key[19]]))
-  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt([key[20],key[21],key[22],key[23]]))
-  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt([key[24],key[25],key[26],key[27]]))
-  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt([key[28],key[29],key[30],key[31]]))
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[4]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(expandedKey[5]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(expandedKey[6]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(expandedKey[7]))
 
   wordsArray
 end
