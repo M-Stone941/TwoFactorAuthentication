@@ -170,15 +170,16 @@ def twofish_key_schedule(key)
     resultWord = [[resultWord[0][3],resultWord[0][2],resultWord[0][1],resultWord[0][0]]]
     arrayS.append(resultWord)
   }
-  arrayS = [arrayS[0][0], arrayS[1][0], arrayS[2][0], arrayS[3][0]]
+  arrayS = [arrayS[3][0], arrayS[2][0], arrayS[1][0], arrayS[0][0]]
   [arrayMeven, arrayModd, arrayS]
 end
 
 def twofishF(r0,r1,roundNum,expandedKey,arrayS)
   t0 = wordToSingleInt(twofishH(r0,arrayS))
   t1 = wordToSingleInt(twofishH(rotateWordLeft(r1,8),arrayS))
-  f0 = wordToArray((t0^t1^wordToSingleInt(expandedKey[(2*roundNum)+8]).modulo(2**32)))
-  f1 = wordToArray((t0^(2*t1)^wordToSingleInt(expandedKey[(2*roundNum)+9]).modulo(2**32)))
+  f0 = wordToArray((t0+t1+wordToSingleInt(expandedKey[(2*roundNum)+8])).modulo(2**32))
+  f1 = wordToArray(((t0+(2*t1)+wordToSingleInt(expandedKey[(2*roundNum)+9])).modulo(2**32)))
+  [f0, f1]
 end
 
 def keyExpansion(mEven,mOdd)
@@ -198,6 +199,7 @@ end
 def twofishH(x,l)
   # x is a word - 32bytes represented as an array of 4 integers, each in range 0-255
   # l is a list of k words. k = 4 as I'm using a 256 bit key.
+
   if K==4
     x[0] = permutation(x[0],1)
     x[1] = permutation(x[1],0)
@@ -240,6 +242,7 @@ def twofish_encrypt_block(block,key)
   mEven,mOdd,arrayS = twofish_key_schedule(key)
 
   expandedKey = keyExpansion(mEven,mOdd)
+  p expandedKey.map {|word|wordToSingleInt(word).to_s(16)}
 
   #Input whitening
   wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[0]))
@@ -253,8 +256,8 @@ def twofish_encrypt_block(block,key)
     wordsArray[0],wordsArray[1] = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
     wordsArray[2] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(wordsArray[0])),1)
     wordsArray[3] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[3],1))^wordToSingleInt(wordsArray[1]))
-    #puts "after round",i
-    #p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
+    puts "after round",i
+    p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
     #swap halves
     tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
     wordsArray = tempWordsArray
