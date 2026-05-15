@@ -175,8 +175,10 @@ def twofish_key_schedule(key)
 end
 
 def twofishF(r0,r1,roundNum,expandedKey,arrayS)
-  t0 = wordToSingleInt(twofishH(r0,arrayS))
-  t1 = wordToSingleInt(twofishH(rotateWordLeft(r1,8),arrayS))
+  r0temp = r0.clone
+  r1temp = r1.clone
+  t0 = wordToSingleInt(twofishH(r0temp,arrayS))
+  t1 = wordToSingleInt(twofishH(rotateWordLeft(r1temp,8),arrayS))
   f0 = wordToArray((t0+t1+wordToSingleInt(expandedKey[(2*roundNum)+8])).modulo(2**32))
   f1 = wordToArray(((t0+(2*t1)+wordToSingleInt(expandedKey[(2*roundNum)+9])).modulo(2**32)))
   [f0, f1]
@@ -242,7 +244,6 @@ def twofish_encrypt_block(block,key)
   mEven,mOdd,arrayS = twofish_key_schedule(key)
 
   expandedKey = keyExpansion(mEven,mOdd)
-  p expandedKey.map {|word|wordToSingleInt(word).to_s(16)}
 
   #Input whitening
   wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[0]))
@@ -253,11 +254,10 @@ def twofish_encrypt_block(block,key)
   #p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
 
   (0...16).each { |i|
-    wordsArray[0],wordsArray[1] = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
-    wordsArray[2] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(wordsArray[0])),1)
-    wordsArray[3] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[3],1))^wordToSingleInt(wordsArray[1]))
-    puts "after round",i
-    p wordsArray.map {|word|wordToSingleInt(word).to_s(16)}
+    f0,f1 = twofishF(wordsArray[0],wordsArray[1],i,expandedKey,arrayS)
+    wordsArray[2] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(f0)),1)
+    wordsArray[3] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[3],1))^wordToSingleInt(f1))
+
     #swap halves
     tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
     wordsArray = tempWordsArray
