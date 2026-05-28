@@ -267,6 +267,7 @@ end
 
 #result = aes256encryptblock(hex_to_dec_array(block),hex_to_dec_array(key))
 #puts "result is: "
+#p result
 #printInHex(result)
 
 def aes256encrypt(plaintext, key, unconvertedText=TrueClass)
