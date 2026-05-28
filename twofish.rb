@@ -290,6 +290,7 @@ def twofish_encrypt(message,key, unconvertedText=TrueClass)
   else
     intArray = message
   end
+
   block_count = intArray.length/16
   ciphertext = []
   (0..block_count - 1).each { |i|
@@ -352,8 +353,16 @@ end
 #result = twofish_decrypt_block(block,key)
 #printInHex(result)
 
-def twofish_decrypt(message,key)
+def twofish_decrypt(ciphertext,key)
 
+  block_count = ciphertext.length/16
+  plaintext = []
+  (0..block_count - 1).each { |i|
+    block = ciphertext[i*16..i*16 + 15]
+    decryptedBlock = twofish_decrypt_block(block, key)
+    plaintext.push(decryptedBlock)
+  }
+  plaintext
 end
 
 def twofish_encryption_menu
@@ -367,7 +376,7 @@ def twofish_encryption_menu
   end
   if response == "1"
     key = ""
-    while key.length != 32
+    while key.length == 0 or key.length >32
       puts "Please enter a key to encrypt the message with. It should be no longer than 32 characters."
       key = gets.chomp
       if key.length > 32
@@ -397,7 +406,7 @@ def twofish_decryption_menu
       ciphertextDone = TrueClass
     end
     key = ""
-    while key.length != 32
+    while key.length == 0 or key.length > 32 do
       puts "Please enter the key that this message was encrypted with:"
       key = gets.chomp
       if key.length > 32
@@ -405,8 +414,18 @@ def twofish_decryption_menu
       end
     end
 
-    message = ascii_to_string(twofish_decrypt(ciphertext, key))
-    message = unpad_message(message)
-    puts "The decrypted message is: #{message}"
+    p twofish_decrypt(ciphertext,string_to_ascii(key))
+    message = twofish_decrypt(ciphertext,string_to_ascii(key))
+    messageString = ""
+    for block in message
+      for word in block
+        for char in word
+          char = ascii_to_string(char)
+          messageString += char
+        end
+      end
+    end
+    messageString = unpad_message(messageString)
+    puts "The decrypted message is: #{messageString}"
   end
 end

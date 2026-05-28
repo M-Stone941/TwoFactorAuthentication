@@ -399,9 +399,18 @@ def aes_decryption_menu
       end
     end
 
-    message = ascii_to_string(aes256decrypt(ciphertext, key))
-    message = unpad_message(message)
-    puts "The decrypted message is: #{message}"
+    message = aes256decrypt(ciphertext, string_to_ascii(key))
+    messageString = ""
+    for block in message
+      for word in block
+        for char in word
+          char = ascii_to_string(char)
+          messageString += char
+        end
+      end
+    end
+    messageString = unpad_message(messageString)
+    puts "The decrypted message is: #{messageString}"
   end
 
 end
