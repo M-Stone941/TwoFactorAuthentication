@@ -274,30 +274,139 @@ def twofish_encrypt_block(block,key)
   wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(expandedKey[6]))
   wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(expandedKey[7]))
 
+  wordsArray[0] = [wordsArray[0][3],wordsArray[0][2],wordsArray[0][1],wordsArray[0][0]]
+  wordsArray[1] = [wordsArray[1][3],wordsArray[1][2],wordsArray[1][1],wordsArray[1][0]]
+  wordsArray[2] = [wordsArray[2][3],wordsArray[2][2],wordsArray[2][1],wordsArray[2][0]]
+  wordsArray[3] = [wordsArray[3][3],wordsArray[3][2],wordsArray[3][1],wordsArray[3][0]]
+
   wordsArray
 end
 
-key = hex_to_dec_array("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF")
-block = hex_to_dec_array("00000000000000000000000000000000")
-result = twofish_encrypt_block(block,key)
-printInHex(result)
-
-def twofish_encrypt(message,key)
-
+def twofish_encrypt(message,key, unconvertedText=TrueClass)
+  intArray = []
+  if unconvertedText==TrueClass
+    message = pad_message(message)
+    intArray = string_to_ascii(message)
+  else
+    intArray = message
+  end
+  block_count = intArray.length/16
+  ciphertext = []
+  (0..block_count - 1).each { |i|
+    block = intArray[i*16..i*16 + 15]
+    encryptedBlock = twofish_encrypt_block(block, key)
+    ciphertext.push(encryptedBlock)
+  }
+  ciphertext
 end
 
 def twofish_decrypt_block(block,key)
+  wordsArray = block.each_slice(4).to_a
 
+  mEven,mOdd,arrayS = twofish_key_schedule(key)
+
+  expandedKey = keyExpansion(mEven,mOdd)
+
+  #Input whitening
+  wordsArray[0] = [wordsArray[0][3],wordsArray[0][2],wordsArray[0][1],wordsArray[0][0]]
+  wordsArray[1] = [wordsArray[1][3],wordsArray[1][2],wordsArray[1][1],wordsArray[1][0]]
+  wordsArray[2] = [wordsArray[2][3],wordsArray[2][2],wordsArray[2][1],wordsArray[2][0]]
+  wordsArray[3] = [wordsArray[3][3],wordsArray[3][2],wordsArray[3][1],wordsArray[3][0]]
+
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[4]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(expandedKey[5]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(expandedKey[6]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(expandedKey[7]))
+
+  (0...16).each { |i|
+    f0,f1 = twofishF(wordsArray[0],wordsArray[1],15-i,expandedKey,arrayS)
+
+    wordsArray[2] = wordToArray(wordToSingleInt(rotateWordLeft(wordsArray[2],1))^wordToSingleInt(f0))
+    wordsArray[3] = rotateWordRight(wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(f1)),1)
+
+    #swap halves
+    tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
+    wordsArray = tempWordsArray
+  }
+
+  #Output whitening
+
+  #swap back
+  tempWordsArray = [wordsArray[2],wordsArray[3],wordsArray[0],wordsArray[1]]
+  wordsArray = tempWordsArray
+
+  wordsArray[0] = wordToArray(wordToSingleInt(wordsArray[0])^wordToSingleInt(expandedKey[0]))
+  wordsArray[1] = wordToArray(wordToSingleInt(wordsArray[1])^wordToSingleInt(expandedKey[1]))
+  wordsArray[2] = wordToArray(wordToSingleInt(wordsArray[2])^wordToSingleInt(expandedKey[2]))
+  wordsArray[3] = wordToArray(wordToSingleInt(wordsArray[3])^wordToSingleInt(expandedKey[3]))
+
+  wordsArray
 end
+
+
+#key = hex_to_dec_array("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF")
+#block = hex_to_dec_array("00000000000000000000000000000000")
+#result = twofish_encrypt_block(block,key)
+#printInHex(result)
+#block = hex_to_dec_array("37527be0052334b89f0cfccae87cfa20")
+#result = twofish_decrypt_block(block,key)
+#printInHex(result)
 
 def twofish_decrypt(message,key)
 
 end
 
 def twofish_encryption_menu
-
+  puts "Please enter the message to be encrypted: "
+  plaintext = gets.chomp
+  puts "Would you like to choose a key yourself, or have one randomly generated?"
+  response = ""
+  while (response != "1") and (response != "2")
+    puts "Press 1 to choose your own key, or press 2 to have one automatically generated:"
+    response = gets.chomp
+  end
+  if response == "1"
+    key = ""
+    while key.length != 32
+      puts "Please enter a key to encrypt the message with. It should be no longer than 32 characters."
+      key = gets.chomp
+      if key.length > 32
+        puts "That is too long to be a key"
+      end
+    end
+  else
+    key = SecureRandom.alphanumeric(32)
+  end
+  printf "Your key is: %s\n", key
+  puts "You will need to save the key in order to decrypt the message.\n\n"
+  puts "The encrypted message is: \n"
+  printInHex(twofish_encrypt(plaintext, string_to_ascii(key)))
 end
 
 def twofish_decryption_menu
+  ciphertextDone = FalseClass
+  while ciphertextDone != TrueClass
+    puts "Please enter the message to be decrypted."
+    puts "It should be written in a hexadecimal format"
+    puts "This means that it should use the digits 0-9 and letters a-f only."
+    ciphertext = gets.chomp
+    ciphertext = ciphertext.split.join("")
+    ciphertext = ciphertext.downcase
+    if ciphertext =~ /^[0123456789abcdef]+$/
+      ciphertext = hex_to_dec_array(ciphertext)
+      ciphertextDone = TrueClass
+    end
+    key = ""
+    while key.length != 32
+      puts "Please enter the key that this message was encrypted with:"
+      key = gets.chomp
+      if key.length > 32
+        puts "That key is incorrect. Keys can't be over 32 characters."
+      end
+    end
 
+    message = ascii_to_string(twofish_decrypt(ciphertext, key))
+    message = unpad_message(message)
+    puts "The decrypted message is: #{message}"
+  end
 end
