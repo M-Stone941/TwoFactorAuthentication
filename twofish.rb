@@ -414,7 +414,7 @@ def twofish_decryption_menu
       end
     end
 
-    p twofish_decrypt(ciphertext,string_to_ascii(key))
+    #p twofish_decrypt(ciphertext,string_to_ascii(key))
     message = twofish_decrypt(ciphertext,string_to_ascii(key))
     messageString = ""
     for block in message
