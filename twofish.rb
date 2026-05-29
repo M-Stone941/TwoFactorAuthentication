@@ -353,6 +353,7 @@ end
 #result = twofish_decrypt_block(block,key)
 #printInHex(result)
 
+
 def twofish_decrypt(ciphertext,key)
 
   block_count = ciphertext.length/16

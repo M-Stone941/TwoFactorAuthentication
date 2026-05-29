@@ -7,7 +7,7 @@ TwofishKeyScheduleReductionConstant = 333
   #polynomial x^8+x^6+x^3+x^2+1 is 101001101
 
 
-def xTimes(number,constant="AES")
+def galoisDoubler(number,constant="AES")
   if constant == "AES"
     reductionConstant = AESGaloisFieldReductionConstant
   elsif constant == "TwofishG"
@@ -34,7 +34,7 @@ def galoisTimes(number1, number2, constant="AES")
     if remainder == 1
       temp = number1
       index.times do |i|
-        temp = xTimes(temp,constant)
+        temp = galoisDoubler(temp,constant)
       end
       sum = sum^temp
     end
